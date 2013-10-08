@@ -51,6 +51,8 @@
      */
     var NFA = function(regex) {
         this.regexStr = regex||"".toString();
+        this.start = {};
+        this.end = {};
     };
 
     NFA.prototype = {
@@ -63,6 +65,8 @@
             var start = new Vertex();
             var end = new Vertex();
             start.addEdge(new Edge(null,start,end));
+            this.start = start;
+            this.end = end;
             return {start: start,end: end};
         }, 
 
@@ -74,6 +78,8 @@
             var start = new Vertex();
             var end = new Vertex();
             start.addEdge(new Edge(symbol,start,end));
+            this.start = start;
+            this.end = end;
             return {start: start,end: end};
         },
 
@@ -88,6 +94,8 @@
                 start.addEdge(new Edge(null, start, subNfaArray[i].start));
                 subNfaArray[i].end.addEdge(new Edge(null, subNfaArray[i].end, end));
             }
+            this.start = start;
+            this.end = end;
             return {start: start,end: end};
         },
         /**
@@ -120,6 +128,8 @@
                             end
                             )
                         );
+            this.start = start;
+            this.end = end;
             return {start: start,end: end};
         },
 
@@ -135,6 +145,8 @@
             start.addEdge(new Edge(null,start,subNfa.start));
             subNfa.end.addEdge(new Edge(null,subNfa.end,subNfa.start));
             subNfa.end.addEdge(new Edge(null,subNfa.end,end));
+            this.start = start;
+            this.end = end;
             return {start: start,end: end};
         },
 
@@ -149,6 +161,8 @@
             start.addEdge(new Edge(null,start,subNfa.start));
             subNfa.end.addEdge(new Edge(null,subNfa.end,subNfa.start));
             subNfa.end.addEdge(new Edge(null,subNfa.end,end));
+            this.start = start;
+            this.end = end;
             return {start: start,end: end};
         },
 
@@ -157,11 +171,58 @@
          *@param subNfa 子状态机
          *
          */
-        question: function(subNfa){
+        question: function(subNfa) {
             var start = new Vertex();
             var end = new Vertex();
             start.addEdge(new Edge(null,start,subNfa.start));
             subNfa.end.addEdge(new Edge(null,subNfa.end,end));
+            this.start = start;
+            this.end = end;
+            return {start: start,end: end};
+        },
+
+        /**
+         *非确定有限自动机的\d构造方法
+         *
+         */
+        digit: function() {
+            var start = new Vertex();
+            var end = new Vertex();
+            for(var i=0;i<10;i++) {
+                var digit = this.normal(i+"");
+                start.addEdge(new Edge(null, start, digit.start));
+                digit.end.addEdge(new Edge(null, digit.end, end));
+            }
+            this.start = start;
+            this.end = end;
+            return {start: start,end: end};
+        },
+
+        /**
+         *非确定有限自动机的\w构造方法
+         *
+         */
+        word: function() {
+            var start = new Vertex();
+            var end = new Vertex();
+            for(var i=0;i<26;i++){
+                //所有的大写字母
+                var upper = this.normal(String.fromCharCode(i+65));
+                start.addEdge(new Edge(null, start, upper.start));
+                upper.end.addEdge(new Edge(null, upper.end, end));
+
+                //所有的小写字母
+                var lower= this.normal(String.fromCharCode(i+97));
+                start.addEdge(new Edge(null, start, lower.start));
+                lower.end.addEdge(new Edge(null, lower.end, end));
+            }
+            //下划线
+            var dash = this.normal("_");
+            start.addEdge(new Edge(null, start, dash.start));
+            dash.end.addEdge(new Edge(null, dash.end, end));
+
+            this.start = start;
+            this.end = end;
             return {start: start,end: end};
         },
 
@@ -214,29 +275,30 @@
         move: function(nfa, symbol) {
             var nfaArray = [];
             var res = [];
-            if(Object.prototype.toString.call(nfa)==="[object Array]"){
+            if(Object.prototype.toString.call(nfa)==="[object Array]") {
                 nfaArray = nfa;
-            }else{
+            } else {
                 nfaArray.push(nfa);
             }
-            for(var i=0;i<nfaArray.length;i++){
-                var edges = nfaArray[i].edges;
+            for(var i=0;i<nfaArray.length;i++) {
+                var edges = nfaArray[i].getEdges();
                 for(var j=0;j<edges.length;j++) {
-                    if(edges[j].symbol === symbol){
+                    if(edges[j].symbol === symbol) {
                         res.push(edges[j].to);
                     }
                 }
             }
             var distinct = {};
             var temp = [];
-            for(i=0;i<res.length;i++){
-                if(distinct[res[i].vid]!==true){
+            for(i=0;i<res.length;i++) {
+                if(distinct[res[i].vid]!==true) {
                     distinct[res[i].vid] = true;
                     temp.push(res[i]);
                 }
             }
             return temp;
         },
+
         /**
          *计算一个dfa的hashcode
          *
@@ -253,13 +315,14 @@
          *获取dfa的转移矩阵
          *
          */
-        getDfaMatrix: function(nfaStart) {
-            var s0 = this.closure(nfaStart);
+        getDfaMatrix: function() {
+            var s0 = this.closure(this.start);
             var stack = [];
+            var dStateCount = 1;
             stack.push(s0);
             var dState = {};
             var startHash = this.dfaHash(s0);
-            dState[startHash] = {};
+            dState[startHash] = {id:dStateCount++};
             dState.start = dState[startHash];
             while(stack.length>0){
                 var state = stack.shift();
@@ -267,51 +330,68 @@
                 for(var symbol in sym){
                     var u = this.closure(this.move(state,symbol));
                     var uHash = this.dfaHash(u);
+                    if(!uHash){
+                        continue;
+                    }
                     if(!dState[uHash]){
                         stack.push(u);
-                        dState[uHash] = {};
+                        dState[uHash] = {id:dStateCount++};
                         dState.end = dState[uHash];
                     }
                     dState[stateHash][symbol] = dState[uHash];
                 }
             }
+            this.dState = dState;
             return dState;
         },
-        test: function(matrix,str) {
+        /**
+         *测试方法
+         *
+         */
+        test: function(str) {
             var strArray = str.split("");
-            var cur = matrix.start;
+            var cur = this.dState.start;
             for(var i=0;i<strArray.length;i++) {
                 if(cur) {
                     cur = cur[strArray[i]];
                 }else{
                     console.log("dismatch!!!");
-                    return;
+                    return false;
                 }
             }
-            if(cur === matrix.end) {
+            if(cur === this.dState.end) {
                 console.log("match!");
+                return true;
             }else{
                 console.log("dismatch!");
+                return false;
             }
         }
     };
     //var nfa = new NFA("(a|b)*abb");
     var nfa = new NFA();
     //(a|b|c)*abc
-    var a = nfa.and([
+    //nfa.and([
+    //        nfa.star(
+    //            nfa.or([
+    //                nfa.normal("a"),
+    //                nfa.normal("b")
+    //                ])
+    //            ),
+    //        nfa.normal("a"),
+    //        nfa.normal("b"),
+    //        nfa.normal("b")
+    //        ]);
+    nfa.and([
             nfa.star(
-                nfa.or([
-                    nfa.normal("a"),
-                    nfa.normal("b"),
-                    nfa.normal("c")
-                    ])
+                //nfa.digit()
+                nfa.word()
                 ),
             nfa.normal("a"),
             nfa.normal("b"),
-            nfa.normal("c")
+            nfa.normal("b")
             ]);
-    //console.log(nfa.closure(a.start));
-    var matrixa = nfa.getDfaMatrix(a.start);
-    //console.log(matrixa);
-    nfa.test(matrixa,"acbcabbabc");
+    nfa.getDfaMatrix();
+    nfa.test("qhxshidaiziabb");
+    //console.log(nfa.dState);
 })();
