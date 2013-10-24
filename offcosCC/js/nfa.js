@@ -205,22 +205,13 @@
         word: function() {
             var start = new Vertex();
             var end = new Vertex();
-            for(var i=0;i<26;i++){
-                //所有的大写字母
-                var upper = this.normal(String.fromCharCode(i+65));
+            var str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_"
+            var rangeArr = str.split("");
+            for(var i=0;i<rangeArr.length;i++){
+                var upper = this.normal(rangeArr[i]);
                 start.addEdge(new Edge(null, start, upper.start));
                 upper.end.addEdge(new Edge(null, upper.end, end));
-
-                //所有的小写字母
-                var lower= this.normal(String.fromCharCode(i+97));
-                start.addEdge(new Edge(null, start, lower.start));
-                lower.end.addEdge(new Edge(null, lower.end, end));
             }
-            //下划线
-            var dash = this.normal("_");
-            start.addEdge(new Edge(null, start, dash.start));
-            dash.end.addEdge(new Edge(null, dash.end, end));
-
             this.start = start;
             this.end = end;
             return {start: start,end: end};
@@ -312,14 +303,15 @@
         },
 
         /**
-         *获取dfa的转移矩阵
+         *计算dfa的转移矩阵
          *
          */
-        getDfaMatrix: function() {
+        calDfa: function() {
             var s0 = this.closure(this.start);
             var stack = [];
             var dStateCount = 1;
             stack.push(s0);
+            //dState用于存储生成的dfa状态，key是dfaHash，value是流水id
             var dState = {};
             var startHash = this.dfaHash(s0);
             dState[startHash] = {id:dStateCount++};
@@ -391,7 +383,7 @@
             nfa.normal("b"),
             nfa.normal("b")
             ]);
-    nfa.getDfaMatrix();
-    nfa.test("qhxshidaiziabb");
+    nfa.calDfa();
+    nfa.test("qhxshidashaziabb");
     //console.log(nfa.dState);
 })();
