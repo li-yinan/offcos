@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+	<head>
+        <title>
+            算法测试
+        </title>
+        <script type="text/javascript" src="js/inherit.js"> </script>
+        <script type="text/javascript" src="js/base.js"> </script>
+        <script type="text/javascript" src="js/heapSort.js"> </script>
+        <script type="text/javascript" src="js/bubleSort.js"> </script>
+        <script type="text/javascript" src="js/shellSort.js"> </script>
+        <script type="text/javascript" src="js/mergeSort.js"> </script>
+	</head>
+	<body>
+        <div>
+            数据记录：
+        </div>
+        <div>
+            <p style="color:red;">数组大小:100000 bubleSort.js:34</p>
+            <p>期望总比较次数:4999950000 bubleSort.js:35</p>
+            <p>实际总比较次数:1841232953 bubleSort.js:36</p>
+            <p>接近期望情况高达:271.55444898231735% bubleSort.js:37</p>
+            <p>期望平均比较次数:49999.5 bubleSort.js:38</p>
+            <p>实际平均比较次数:18412.32953 bubleSort.js:39</p>
+            <p>time spent 20456 </p>
+        </div>
+        <div>
+            <p style="color:red;">数组大小:100000 heapsort.js:82</p>
+            <p>期望总比较次数:1560964 heapsort.js:83</p>
+            <p>实际总比较次数:1574919 heapsort.js:84</p>
+            <p>接近期望情况高达:99.11392569672986% heapsort.js:85</p>
+            <p>期望平均比较次数:15.609640474436812 heapsort.js:86</p>
+            <p>实际平均比较次数:15.74919 heapsort.js:87</p>
+            <p>time spent 58 </p>
+        </div>
+        <div>
+            <p style="color:red;">数组大小:10000000 heapsort.js:82</p>
+            <p>期望总比较次数:222534966 heapsort.js:83</p>
+            <p>实际总比较次数:223835654 heapsort.js:84</p>
+            <p>接近期望情况高达:99.41890966222718% heapsort.js:85</p>
+            <p>期望平均比较次数:22.25349666421154 heapsort.js:86</p>
+            <p>实际平均比较次数:22.3835654 heapsort.js:87</p>
+            <p>time spent 7914 </p>
+        </div>
+        <script>
+            document.body.innerHTML = "";
+            var heapSort = new HeapSort();
+            console.log("\n堆排序:")
+            //heapSort.test(10000,true);
+            heapSort.test(10000);
+            var bubleSort = new BubleSort();
+            console.log("\n冒泡排序:")
+            bubleSort.test(10000);
+            var shellSort = new ShellSort();
+            console.log("\n希尔排序:")
+            shellSort.test(10000);
+            var mergeSort = new MergeSort();
+            console.log("\n归并排序:")
+            mergeSort.test(10000);
+        </script>
+	</body>
+</html>
