@@ -101,4 +101,41 @@ define(function(require) {
         name:"other"
     });
     model.del(id1);
+
+    //验证listContainer
+    var ListContainer = require("./listContainer");
+    var ListItem = require("./listItem");
+    var trigger = Trigger.getTrigger("offcos");
+
+    var MyListContainer = function() {
+    };
+    MyListContainer.prototype = {
+        tagName:"div.list-container",
+        event: {
+            "click addItem":"addItem"
+        },
+        addItem: function() {
+            var item = new MyListItem();
+            this.el.childNodes[0].appendChild(item.el);
+
+        },
+        render: function() {
+            document.body.appendChild(this.el);
+            this.el.innerHTML = '<ul class="lst"></ul><span class="addItem">addItem</span>'
+        }
+    };
+    MyListContainer.prototype.constructor = MyListContainer;
+    MyListContainer = inherit(MyListContainer,ListContainer);
+
+    var MyListItem = function() {
+    };
+    MyListItem.prototype = {
+        render:function() {
+            this.el.innerHTML = '<span class="moveUp">上移</span><span class="moveDown">下移</span><span class="del">删除</span>';
+        }
+    };
+    MyListItem.prototype.constructor = MyListItem;
+    MyListItem = inherit(MyListItem,ListItem);
+    var myContainer = new MyListContainer();
+
 });

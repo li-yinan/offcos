@@ -79,12 +79,38 @@ define(function(require) {
 				el.attachEvent("on" + eventName, cb);
 			}
 		},
+
+        /**
+         * brief 销毁元素
+         *
+         * @return 
+         */
 		destroy: function() {
 			if (this.el.parentNode) {
 				this.el.parentNode.removeChild(this.el);
 			}
 		},
-		render: function() {}
+        /**
+         * brief 刷新数据并渲染
+         *
+         * @return 
+         */
+        refresh: function() {
+            this.render();
+        },
+
+        /**
+         * brief 空的渲染，会被继承类覆盖
+         *
+         * @return 
+         */
+		render: function() {
+            //这里用setTimeout的原因是esl会捕捉错误
+            //导致这个错误信息没法抛出
+            setTimeout(function() {
+                throw("render function should be override!!!");
+            });
+        }
 	};
 	return Controller;
 });
