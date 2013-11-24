@@ -5,79 +5,87 @@
  * @version 1.0
  * @date 2013-08-02
  */
-define(function(require){
-    var copy = function(from,to){
-        for(var i in from){
-            if((from.hasOwnProperty&&from.hasOwnProperty(i))||(!from.hasOwnProperty)){
-                if(!(i in ["event"])){
-                    to[i] = from[i];
-                }
-            }
+define(function(require) {
+	var util = require("./util");
+
+	/**
+     * brief 控制器
+     *
+     * @return 
+     */
+	var Controller = function() {
+        var i=0;
+        //解析tagName，生成根元素
+        //this.tagName是这样的"div.className1.className2"
+        var name = (this.tagName || "")
+            .replace(/\s+/,"").split(".");
+        this.el = document.createElement(name[0] || "div");
+        for(i=1;i<name.length;i++) {
+            util.addClass(this.el,name[i]);
         }
-    };
+        //代理事件
+		for (i in this.event) {
+			if (this.event.hasOwnProperty(i)) {
+				var eventName = i.split(" ")[0];
+				var className = i.split(" ")[1];
+				this.delegate(this.el, eventName, className, this[this.event[i]]);
+			}
+		}
+        //最后渲染
+		this.render();
+	};
 
-    var Controller = function(options){
-        var Clazz = function(){
-            this.args = arguments;
-            this.data = options.data;
-            this.tagName = options.tagName||"li";
-            this.el = document.createElement(this.tagName);
-            this.eventList = options.event;
-            for(var i in this.eventList){
-                if(this.eventList.hasOwnProperty(i)){
-                    var eventName = i.split(" ")[0];
-                    var className = i.split(" ")[1];
-                    this.delegate(this.el,eventName,className,this[this.eventList[i]]);
-                }
-            }
-            //this.init();
-            this.init.apply(this,arguments);
-            this.render();
-        };
-
-        Clazz.prototype.delegate = function(el,eventName,className,callback){
-            var _this = this;
-            var cb = function(e){
-                e = e||window.event;
-                var target = e.srcElement||e.target;
-                var reg = new RegExp(className);
-                if(reg.test(target.className)){
-                    callback.call(_this,e);
-                }
-            };
-            //对blur和focus这种不冒泡事件特殊处理
-            if(eventName==="blur"){
-                if(el.addEventListener){
-                    el.addEventListener("blur",cb,true);
-                }else if(el.attachEvent){
-                    el.attachEvent("onfocusout",cb);
-                }
-                return;
-            }else if(eventName==="focus"){
-                if(el.addEventListener){
-                    el.addEventListener("focus",cb,true);
-                }else if(el.attachEvent){
-                    el.attachEvent("onfocusin",cb);
-                }
-                return;
-            }
-            if(el.addEventListener){
-                el.addEventListener(eventName,cb,false);
-            }else if(el.attachEvent){
-                el.attachEvent("on"+eventName,cb);
-            }
-        };
-
-        Clazz.prototype.destroy = function(){
-            baidu.dom.remove(this.el);
-        };
-
-        Clazz.prototype.init = function(){
-        };
-        Clazz.prototype.render = function(){
-        };
-        copy(options,Clazz.prototype);
-        return Clazz;
-    };
-    return Controller;
+	Controller.prototype = {
+		/**
+         * brief 事件代理
+         *
+         * @param el 代理的根元素
+         * @param eventName 事件名字
+         * @param className 被代理的元素class
+         * @param callback 事件回调
+         *
+         * @return 
+         */
+		delegate: function(el, eventName, className, callback) {
+			var _this = this;
+			var cb = function(e) {
+				e = e || window.event;
+				var target = e.srcElement || e.target;
+				var reg = new RegExp(className);
+				if (reg.test(target.className)) {
+					callback.call(_this, e);
+				}
+			};
+			//对blur和focus这种不冒泡事件特殊处理
+			if (eventName === "blur") {
+				if (el.addEventListener) {
+					//利用事件捕捉
+					el.addEventListener("blur", cb, true);
+				} else if (el.attachEvent) {
+					el.attachEvent("onfocusout", cb);
+				}
+				return;
+			} else if (eventName === "focus") {
+				if (el.addEventListener) {
+					el.addEventListener("focus", cb, true);
+				} else if (el.attachEvent) {
+					el.attachEvent("onfocusin", cb);
+				}
+				return;
+			}
+			if (el.addEventListener) {
+				el.addEventListener(eventName, cb, false);
+			} else if (el.attachEvent) {
+				el.attachEvent("on" + eventName, cb);
+			}
+		},
+		destroy: function() {
+			if (this.el.parentNode) {
+				this.el.parentNode.removeChild(this.el);
+			}
+		},
+		render: function() {}
+	};
+	return Controller;
 });
+

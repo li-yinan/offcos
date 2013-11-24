@@ -13,3 +13,8 @@
     height:500px;
     list-style:none;
 }
+.ok {
+    width: 100px;
+    height: 100px;
+    background-color: yellow;
+}
